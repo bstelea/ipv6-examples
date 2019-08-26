@@ -57,11 +57,27 @@ int main(int argc, char* argv[]) {
           continue;
       }
 
-      if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+      if (connect(sockfd, p->ai_addr, p->ai_addrlen) < 0) {
           perror("connect");
           close(sockfd);
           continue;
       }
+
+      //Sockets Layer Call: send()
+      n = send(sockfd,buffer, strlen(buffer)+1, 0);
+      if (n < 0)
+          error("ERROR writing to socket");
+
+      memset(buffer, 0, 256);
+
+      //Sockets Layer Call: recv()
+      n = recv(sockfd, buffer, 255, 0);
+      if (n < 0)
+          error("ERROR reading from socket");
+      printf("Message from server: %s\n", buffer);
+
+      //Sockets Layer Call: close()
+      close(sockfd);
 
       break; // if we get here, we must have connected successfully
   }
@@ -70,23 +86,7 @@ int main(int argc, char* argv[]) {
       // looped off the end of the list with no connection
       fprintf(stderr, "failed to connect\n");
       exit(2);
-  } else {
-    //Sockets Layer Call: send()
-    n = send(sockfd,buffer, strlen(buffer)+1, 0);
-    if (n < 0)
-        error("ERROR writing to socket");
-
-    memset(buffer, 0, 256);
-
-    //Sockets Layer Call: recv()
-    n = recv(sockfd, buffer, 255, 0);
-    if (n < 0)
-        error("ERROR reading from socket");
-    printf("Message from server: %s\n", buffer);
-
-    //Sockets Layer Call: close()
-    close(sockfd);
-  }
+  } 
 
   freeaddrinfo(servinfo); // all done with this structure
   return 0;

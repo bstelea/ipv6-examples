@@ -67,6 +67,36 @@ int main(int argc, char* argv[]) {
           continue;
       }
 
+      listen(sockfd,5);
+
+      //Sockets Layer Call: accept()
+      newsockfd = accept(sockfd, p->ai_addr, &(p->ai_addrlen));
+      if (newsockfd < 0)
+          error("ERROR on accept");
+
+      struct sockaddr_in6* ipv6 = (struct sockaddr_in6 *) p->ai_addr;
+      //Sockets Layer Call: inet_ntop()
+      inet_ntop(AF_INET6, &(ipv6->sin6_addr), client_addr_ipv6, 100);
+      printf("Incoming connection from client having IPv6 address: %s\n",client_addr_ipv6);
+
+      memset(buffer,0, 256);
+
+      //Sockets Layer Call: recv()
+      n = recv(newsockfd, buffer, 255, 0);
+      if (n < 0)
+          error("ERROR reading from socket");
+
+      printf("Message from client: %s\n", buffer);
+
+      //Sockets Layer Call: send()
+      n = send(newsockfd, "Server got your message", 23+1, 0);
+      if (n < 0)
+          error("ERROR writing to socket");
+
+      //Sockets Layer Call: close()
+      close(sockfd);
+      close(newsockfd);
+
       break; // if we get here, we must have connected successfully
   }
 
@@ -74,36 +104,6 @@ int main(int argc, char* argv[]) {
       // looped off the end of the list with no successful bind
       fprintf(stderr, "failed to bind socket\n");
       exit(2);
-  } else {
-    listen(sockfd,5);
-
-    //Sockets Layer Call: accept()
-    newsockfd = accept(sockfd, p->ai_addr, &(p->ai_addrlen));
-    if (newsockfd < 0)
-        error("ERROR on accept");
-
-    struct sockaddr_in6* ipv6 = (struct sockaddr_in6 *) p->ai_addr;
-    //Sockets Layer Call: inet_ntop()
-    inet_ntop(AF_INET6, &(ipv6->sin6_addr), client_addr_ipv6, 100);
-    printf("Incoming connection from client having IPv6 address: %s\n",client_addr_ipv6);
-
-    memset(buffer,0, 256);
-
-    //Sockets Layer Call: recv()
-    n = recv(newsockfd, buffer, 255, 0);
-    if (n < 0)
-        error("ERROR reading from socket");
-
-    printf("Message from client: %s\n", buffer);
-
-    //Sockets Layer Call: send()
-    n = send(newsockfd, "Server got your message", 23+1, 0);
-    if (n < 0)
-        error("ERROR writing to socket");
-
-    //Sockets Layer Call: close()
-    close(sockfd);
-    close(newsockfd);
   }
 
   freeaddrinfo(servinfo); // all done with this structure
